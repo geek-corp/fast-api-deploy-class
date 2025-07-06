@@ -1,0 +1,80 @@
+name: Build & Deploy FastAPI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and test with Docker Compose
+        run: |
+          # Construir y levantar los servicios
+          docker compose up -d --build
+          
+          # Esperar a que los servicios estén listos
+          sleep 10
+          
+          # Testear que el servicio FastAPI está funcionando a través del proxy nginx
+          curl --fail http://localhost/docs
+          
+          # Verificar que el endpoint de health/info funciona
+          curl --fail http://localhost/
+          
+          # Verificar logs para asegurar que no hay errores
+          docker compose logs api
+          docker compose logs nginx
+          
+          # Limpiar después del test
+          docker compose down
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy files to remote server
+        run: |
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/app
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /home/${{ secrets.SSH_USER }}/app
+            
+            # Deploy de la aplicación
+            echo "🚀 Iniciando deploy..."
+            docker compose down || true
+            docker compose up -d --build
+            
+            # Verificación básica
+            echo "🔍 Verificando que los servicios estén activos..."
+            sleep 10
+            docker compose ps
+            
+            # Test simple de conectividad
+            if curl --fail --silent --max-time 5 http://localhost/ > /dev/null; then
+              echo "✅ Aplicación funcionando correctamente en puerto 80"
+            else
+              echo "❌ Error: La aplicación no responde"
+              echo "📋 Logs para debugging:"
+              docker compose logs --tail=20
+            fi
+          EOF
