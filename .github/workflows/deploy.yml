@@ -74,8 +74,8 @@ jobs:
             docker compose ps
             
             # Test simple de conectividad
-            if curl --fail --silent --max-time 5 http://localhost/ > /dev/null; then
-              echo "✅ Aplicación funcionando correctamente en puerto 80"
+            if curl --fail --silent --max-time 10 http://localhost:8080/ > /dev/null; then
+              echo "✅ Aplicación funcionando correctamente en puerto 8080"
             else
               echo "❌ Error: La aplicación no responde"
               echo "📋 Logs para debugging:"
