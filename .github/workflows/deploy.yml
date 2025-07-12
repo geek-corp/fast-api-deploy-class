@@ -22,13 +22,19 @@ jobs:
           docker compose up -d --build
           
           # Esperar a que los servicios estén listos
-          sleep 10
+          echo "⏳ Esperando a que los servicios estén listos..."
+          sleep 30
+          
+          # Verificar que los contenedores estén funcionando
+          docker compose ps
           
           # Testear que el servicio FastAPI está funcionando a través del proxy nginx
-          curl --fail http://localhost/8080/docs
+          echo "🔍 Probando endpoint de documentación..."
+          curl --fail --silent --max-time 10 http://localhost:8080/docs
           
           # Verificar que el endpoint de health/info funciona
-          curl --fail http://localhost/8080
+          echo "🔍 Probando endpoint principal..."
+          curl --fail --silent --max-time 10 http://localhost:8080/
           
           # Verificar logs para asegurar que no hay errores
           docker compose logs api
