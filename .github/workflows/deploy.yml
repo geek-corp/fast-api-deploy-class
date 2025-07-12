@@ -26,9 +26,16 @@ jobs:
       - name: Run unit tests in Docker
         run: |
           echo "🧪 Ejecutando pruebas unitarias en Docker..."
-          docker run --rm -v "$(pwd):/app" -w /app fastapi-test \
-            sh -c "pip install pytest pytest-cov pytest-asyncio httpx && \
-                   pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml"
+          docker run --rm -v "$(pwd):/app" -w /app --user root fastapi-test \
+            sh -c "
+              pip install pytest pytest-cov pytest-asyncio httpx &&
+              mkdir -p /app/htmlcov &&
+              chmod 777 /app/htmlcov &&
+              export COVERAGE_FILE=/app/.coverage &&
+              pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html:/app/htmlcov --cov-report=xml:/app/coverage.xml &&
+              chmod 666 /app/.coverage /app/coverage.xml 2>/dev/null || true &&
+              chmod -R 666 /app/htmlcov/* 2>/dev/null || true
+            "
           echo "✅ Todas las pruebas unitarias pasaron exitosamente"
           echo "📊 Resumen de cobertura generado en htmlcov/"
 
