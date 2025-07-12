@@ -14,22 +14,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Install dependencies
+      - name: Build test image
         run: |
-          echo "📦 Instalando dependencias..."
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          echo "✅ Dependencias instaladas correctamente"
+          echo "🏗️ Construyendo imagen para pruebas..."
+          docker build -t fastapi-test .
+          echo "✅ Imagen de pruebas construida exitosamente"
 
-      - name: Run unit tests
+      - name: Run unit tests in Docker
         run: |
-          echo "🧪 Ejecutando pruebas unitarias..."
-          pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html
+          echo "🧪 Ejecutando pruebas unitarias en Docker..."
+          docker run --rm -v "$(pwd):/app" -w /app fastapi-test \
+            sh -c "pip install pytest pytest-cov pytest-asyncio httpx && \
+                   pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml"
           echo "✅ Todas las pruebas unitarias pasaron exitosamente"
           echo "📊 Resumen de cobertura generado en htmlcov/"
 
@@ -42,13 +41,14 @@ jobs:
           echo "  ✅ Estado: EXITOSO"
           
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
           path: |
             .coverage
             htmlcov/
+            coverage.xml
           retention-days: 30
 
   build:
