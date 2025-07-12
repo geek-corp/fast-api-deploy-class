@@ -14,7 +14,7 @@ def health_check():
 def calcular_edad(nombre: str, fecha_nacimiento: str):
     hoy = datetime.now()
     fecha_nacimiento = datetime.strptime(fecha_nacimiento, "%Y-%m-%d")
-    edad = fecha_nacimiento.year - hoy.year
+    edad =  hoy.year - fecha_nacimiento.year
     if hoy.month < fecha_nacimiento.month or (hoy.month == fecha_nacimiento.month and hoy.day < fecha_nacimiento.day):
         edad -= 1
     return {"nombre": nombre, "edad": edad}
