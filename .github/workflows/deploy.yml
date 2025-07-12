@@ -6,8 +6,9 @@ on:
       - master
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    name: "🧪 Pruebas Unitarias"
 
     steps:
       - name: Checkout repository
@@ -20,14 +21,44 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "📦 Instalando dependencias..."
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          echo "✅ Dependencias instaladas correctamente"
 
       - name: Run unit tests
         run: |
           echo "🧪 Ejecutando pruebas unitarias..."
-          pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing
+          pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html
           echo "✅ Todas las pruebas unitarias pasaron exitosamente"
+          echo "📊 Resumen de cobertura generado en htmlcov/"
+
+      - name: Test Summary
+        run: |
+          echo "📋 RESUMEN DE PRUEBAS:"
+          echo "  📁 Directorio: tests/"
+          echo "  🧪 Framework: pytest"
+          echo "  📊 Cobertura: habilitada"
+          echo "  ✅ Estado: EXITOSO"
+          
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            .coverage
+            htmlcov/
+          retention-days: 30
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    name: "🏗️ Build & Test Docker"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -62,6 +93,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    name: "🚀 Deploy a Producción"
 
     steps:
       - name: Checkout repository
