@@ -13,6 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: |
+          echo "🧪 Ejecutando pruebas unitarias..."
+          pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing
+          echo "✅ Todas las pruebas unitarias pasaron exitosamente"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
