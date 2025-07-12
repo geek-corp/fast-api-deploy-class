@@ -10,10 +10,19 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app ./app
+COPY ./tests ./tests
+COPY pytest.ini .
+
+# Crear directorios para reportes con permisos correctos
+RUN mkdir -p /app/htmlcov && chmod 755 /app/htmlcov
 
 # Crear un usuario no-root para seguridad
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
+
+# Configurar variables de entorno para pytest
+ENV PYTHONPATH=/app
+ENV COVERAGE_FILE=/app/.coverage
 
 # Exponer el puerto
 EXPOSE 8000

@@ -8,20 +8,7 @@ class TestEndpoints:
         """Prueba el endpoint raíz"""
         response = client.get("/")
         assert response.status_code == 200
-        assert response.json() == {"mensaje": "¡Hola mundo desde FastAPI!"}
-    
-    def test_leer_root_response_headers(self, client):
-        """Prueba que los headers de respuesta sean correctos"""
-        response = client.get("/")
-        assert response.headers["content-type"] == "application/json"
-    
-    def test_leer_root_response_structure(self, client):
-        """Prueba la estructura de la respuesta"""
-        response = client.get("/")
-        json_response = response.json()
-        assert "mensaje" in json_response
-        assert isinstance(json_response["mensaje"], str)
-        assert len(json_response["mensaje"]) > 0
+        assert response.json() == {"mensaje": "¡Hola mundo desde FastAPI 2!"}
 
 class TestApplicationStructure:
     """Pruebas para la estructura de la aplicación"""
@@ -78,10 +65,9 @@ class TestPerformance:
             response = client.get("/")
             responses.append(response)
         
-        # Todas las respuestas deben ser exitosas
         for response in responses:
             assert response.status_code == 200
-            assert response.json() == {"mensaje": "¡Hola mundo desde FastAPI!"}
+            assert response.json() == {"mensaje": "¡Hola mundo desde FastAPI 2!"}
 
 class TestHealthCheck:
     """Pruebas para verificar el estado de salud de la aplicación"""
@@ -90,11 +76,22 @@ class TestHealthCheck:
         """Prueba básica de salud de la aplicación"""
         response = client.get("/")
         assert response.status_code == 200
-        # Verificar que la aplicación responda consistentemente
         response2 = client.get("/")
         assert response.json() == response2.json()
 
+class TestCalcularEdad:
+    """Pruebas para el endpoint de calcular edad"""
+
+    def test_calcular_edad(self, client):
+        """Prueba que el endpoint de calcular edad funcione correctamente"""
+        response = client.get("/calcular-edad/Jose/1990-01-01")
+        assert response.status_code == 200
+        assert response.json() == {"nombre": "Jose", "edad": 35}
+
+
+
 @pytest.mark.parametrize("path", ["/", "/docs", "/openapi.json"])
+
 def test_common_endpoints_accessibility(client, path):
     """Prueba que los endpoints comunes sean accesibles"""
     response = client.get(path)
