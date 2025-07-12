@@ -1,25 +1,21 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
-
-# Cliente de pruebas
-client = TestClient(app)
+import time
 
 class TestEndpoints:
     """Pruebas para los endpoints de la aplicación FastAPI"""
     
-    def test_leer_root(self):
+    def test_leer_root(self, client):
         """Prueba el endpoint raíz"""
         response = client.get("/")
         assert response.status_code == 200
         assert response.json() == {"mensaje": "¡Hola mundo desde FastAPI!"}
     
-    def test_leer_root_response_headers(self):
+    def test_leer_root_response_headers(self, client):
         """Prueba que los headers de respuesta sean correctos"""
         response = client.get("/")
         assert response.headers["content-type"] == "application/json"
     
-    def test_leer_root_response_structure(self):
+    def test_leer_root_response_structure(self, client):
         """Prueba la estructura de la respuesta"""
         response = client.get("/")
         json_response = response.json()
@@ -30,18 +26,18 @@ class TestEndpoints:
 class TestApplicationStructure:
     """Pruebas para la estructura de la aplicación"""
     
-    def test_app_instance(self):
+    def test_app_instance(self, app_instance):
         """Prueba que la instancia de app esté correctamente configurada"""
-        assert app is not None
-        assert hasattr(app, "router")
+        assert app_instance is not None
+        assert hasattr(app_instance, "router")
     
-    def test_openapi_schema(self):
+    def test_openapi_schema(self, client):
         """Prueba que el schema OpenAPI se genere correctamente"""
         response = client.get("/openapi.json")
         assert response.status_code == 200
         assert "openapi" in response.json()
     
-    def test_docs_endpoint(self):
+    def test_docs_endpoint(self, client):
         """Prueba que el endpoint de documentación funcione"""
         response = client.get("/docs")
         assert response.status_code == 200
@@ -50,13 +46,13 @@ class TestApplicationStructure:
 class TestErrorHandling:
     """Pruebas para manejo de errores"""
     
-    def test_not_found_endpoint(self):
+    def test_not_found_endpoint(self, client):
         """Prueba que endpoints no existentes devuelvan 404"""
         response = client.get("/endpoint-inexistente")
         assert response.status_code == 404
         assert response.json() == {"detail": "Not Found"}
     
-    def test_method_not_allowed(self):
+    def test_method_not_allowed(self, client):
         """Prueba que métodos no permitidos devuelvan 405"""
         response = client.post("/")
         assert response.status_code == 405
@@ -65,9 +61,8 @@ class TestErrorHandling:
 class TestPerformance:
     """Pruebas básicas de rendimiento"""
     
-    def test_response_time(self):
+    def test_response_time(self, client):
         """Prueba que el tiempo de respuesta sea razonable"""
-        import time
         start_time = time.time()
         response = client.get("/")
         end_time = time.time()
@@ -76,7 +71,7 @@ class TestPerformance:
         assert response_time < 1.0  # Debería responder en menos de 1 segundo
         assert response.status_code == 200
 
-    def test_multiple_requests(self):
+    def test_multiple_requests(self, client):
         """Prueba múltiples requests consecutivos"""
         responses = []
         for _ in range(5):
@@ -91,7 +86,7 @@ class TestPerformance:
 class TestHealthCheck:
     """Pruebas para verificar el estado de salud de la aplicación"""
     
-    def test_app_health(self):
+    def test_app_health(self, client):
         """Prueba básica de salud de la aplicación"""
         response = client.get("/")
         assert response.status_code == 200
@@ -100,7 +95,7 @@ class TestHealthCheck:
         assert response.json() == response2.json()
 
 @pytest.mark.parametrize("path", ["/", "/docs", "/openapi.json"])
-def test_common_endpoints_accessibility(path):
+def test_common_endpoints_accessibility(client, path):
     """Prueba que los endpoints comunes sean accesibles"""
     response = client.get(path)
     # Todos estos endpoints deberían ser accesibles (no 404)
