@@ -32,7 +32,7 @@ jobs:
               mkdir -p /app/htmlcov &&
               chmod 777 /app/htmlcov &&
               export COVERAGE_FILE=/app/.coverage &&
-              pytest app/tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html:/app/htmlcov --cov-report=xml:/app/coverage.xml &&
+              pytest tests/ -v --tb=short --color=yes --cov=app --cov-report=term-missing --cov-report=html:/app/htmlcov --cov-report=xml:/app/coverage.xml &&
               chmod 666 /app/.coverage /app/coverage.xml 2>/dev/null || true &&
               chmod -R 666 /app/htmlcov/* 2>/dev/null || true
             "
